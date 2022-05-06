@@ -1,9 +1,34 @@
 ﻿@page "/"
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Single</PageTitle>
 
-<h1>Hello, world!</h1>
+@using singleApp.Data
+@inject MusixmatchClient MusixmatchClient
 
-Welcome to your new app.
+<h1>Single</h1>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+@if (track == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <p>
+        Name:  @track.Track_Name <br />
+        Artist: @track.Artist_Name <br />
+        Album: @track.Album_Name <br />
+        Lyrics: @lyrics.Lyrics_Body <br />
+    </p>
+}
+
+@code {
+    private MusixmatchChartTrackData? track = null;
+    private MusixmatchLyricsData? lyrics = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        track = await MusixmatchClient.GetSongFromChartAsync();
+
+        lyrics = await MusixmatchClient.GetLyricsForTrackAsync(track.Track_Id); 
+    }
+}

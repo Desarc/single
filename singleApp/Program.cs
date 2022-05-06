@@ -7,7 +7,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
+builder.Services.AddSingleton<MusixmatchClient>();
+
+builder.Services
+    .AddHttpClient("Musixmatch", httpClient =>
+    {
+        httpClient.BaseAddress = new Uri(Constants.MusixmatchApiUrl);
+    });
+
+builder.Host.ConfigureAppConfiguration((_, config) =>
+{
+    config.AddEnvironmentVariables(prefix: "SINGLE_");
+});
 
 var app = builder.Build();
 

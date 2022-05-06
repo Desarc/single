@@ -4,9 +4,9 @@ services:
   singleapp:
     image: docker-dev.artifacts.dips.local/single/single:latest
     ports:
-      - "5000:80"
+      - "80:5000"
     environment:
-      - SINGLE_musixmatch_ApiKey
+      - SINGLE_MusixmatchApiKey=${MUSIXMATCH_APIKEY}
     build:
       context: .
       dockerfile: Dockerfile
