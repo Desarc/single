@@ -26,6 +26,7 @@ public class MusixmatchLyricsData
 {
     public int Lyrics_Id { get; set; }
     public int Restricted { get; set; }
+    public bool IsRestricted => Restricted != 0;
     public int Instrumental { get; set; }
     public string Lyrics_Body { get; set; }
     public string Lyrics_Language { get; set; }

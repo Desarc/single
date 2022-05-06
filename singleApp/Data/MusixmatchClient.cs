@@ -11,6 +11,11 @@ public class MusixmatchClient
     {
         _configuration = configuration;
         _httpClientFactory = httpClientFactory;
+
+        if (string.IsNullOrEmpty(ApiKey))
+        {
+            throw new Exception("'MusixmatchApiKey' not configured");
+        }
     }
 
     private readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions
@@ -30,7 +35,7 @@ public class MusixmatchClient
 
         if (!responseMessage.IsSuccessStatusCode)
         {
-            throw new Exception($"Failed to get data from {httpClient.BaseAddress}/{apiUrl}");
+            throw new Exception($"Failed to get data from {httpClient.BaseAddress}/{apiUrl}: {responseMessage.ReasonPhrase}");
         }
 
         return responseMessage;
@@ -49,12 +54,26 @@ public class MusixmatchClient
 
         var contentJson = await GetJsonAsync(apiUrl);
 
+        Console.WriteLine(contentJson);
+
         var response = JsonSerializer.Deserialize<MusixmatchChartResponse>(contentJson, SerializerOptions);
 
-        return response.Message.Body.Track_List;
+        if (response.Message.Header.Status_Code != 200)
+        {
+            throw new Exception($"Failed to get chart for country '{country}': {response.Message.Header.Status_Code}");
+        }
+
+        var trackList = response.Message.Body.Track_List;
+
+        if (trackList.Length == 0)
+        {
+            throw new Exception($"Chart for country '{country}' contains no tracks");
+        }
+
+        return trackList;
     }
 
-    public async Task<MusixmatchChartTrackData> GetSongFromChartAsync()
+    public async Task<MusixmatchChartTrackData> GetRandomSongFromChartAsync()
     {
         var chart = await GetChartAsync(Constants.CountryNO);
 
@@ -70,8 +89,62 @@ public class MusixmatchClient
 
         var contentJson = await GetJsonAsync(apiUrl);
 
+        Console.WriteLine(contentJson);
+
         var response = JsonSerializer.Deserialize<MusixmatchLyricsResponse>(contentJson, SerializerOptions);
 
+        if (response.Message.Header.Status_Code != 200)
+        {
+            throw new Exception($"Failed to get lyrics for track '{trackId}': {response.Message.Header.Status_Code}");
+        }
+
         return response.Message.Body.Lyrics;
+    }
+
+    public async Task<MusixmatchLyricsData> GetLyricsForCommonTrackAsync(int commonTrackId)
+    {
+        var apiUrl = string.Format(Constants.LyricsUrlCommonTrack, commonTrackId);
+
+        var contentJson = await GetJsonAsync(apiUrl);
+
+        Console.WriteLine(contentJson);
+
+        var response = JsonSerializer.Deserialize<MusixmatchLyricsResponse>(contentJson, SerializerOptions);
+
+        if (response.Message.Header.Status_Code != 200)
+        {
+            throw new Exception($"Failed to get lyrics for common track '{commonTrackId}': {response.Message.Header.Status_Code}");
+        }
+
+        return response.Message.Body.Lyrics;
+    }
+
+    public async Task<MusixmatchLyricsData> GetRandomLyricsAsync()
+    {
+        var chart = await GetChartAsync(Constants.CountryNO);
+
+        var random = new Random();
+        while (true)
+        {
+            var randomTrackNo = random.Next(0, chart.Length - 1);
+            var track = chart[randomTrackNo].Track;
+
+            if (track.Commontrack_Id != 0)
+            {
+                var lyrics = await GetLyricsForCommonTrackAsync(track.Commontrack_Id);
+                if (!lyrics.IsRestricted)
+                {
+                    return lyrics;
+                }
+            }
+            else
+            {
+                var lyrics = await GetLyricsForTrackAsync(track.Track_Id);
+                if (!lyrics.IsRestricted)
+                {
+                    return lyrics;
+                }
+            }
+        }
     }
 }

@@ -7,28 +7,35 @@
 
 <h1>Single</h1>
 
-@if (track == null)
+@if (lyrics == null)
 {
     <p><em>Loading...</em></p>
 }
 else
 {
     <p>
+       @* @data
         Name:  @track.Track_Name <br />
         Artist: @track.Artist_Name <br />
-        Album: @track.Album_Name <br />
+        Album: @track.Album_Name <br />*@
         Lyrics: @lyrics.Lyrics_Body <br />
     </p>
+
+    <img src="@lyrics.Pixel_Tracking_Url">
 }
 
 @code {
-    private MusixmatchChartTrackData? track = null;
+    //private MusixmatchChartTrackData? track = null;
     private MusixmatchLyricsData? lyrics = null;
+
+    private string data = null;
 
     protected override async Task OnInitializedAsync()
     {
-        track = await MusixmatchClient.GetSongFromChartAsync();
+        //track = await MusixmatchClient.GetRandomSongFromChartAsync();
 
-        lyrics = await MusixmatchClient.GetLyricsForTrackAsync(track.Track_Id); 
+        //data = await MusixmatchClient.GetJsonAsync(string.Format(Constants.LyricsUrl, track.Track_Id));
+
+        lyrics = await MusixmatchClient.GetRandomLyricsAsync(); 
     }
 }
