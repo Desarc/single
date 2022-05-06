@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  singleapp:
+    image: docker-dev.artifacts.dips.local/single/single:latest
+    ports:
+      - "5000:80"
+    environment:
+      - SINGLE_musixmatch_ApiKey
+    build:
+      context: .
+      dockerfile: Dockerfile
+      labels:
+        commit_id: ${COMMIT_ID}
